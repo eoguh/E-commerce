@@ -1,0 +1,125 @@
+<link >
+
+
+
+<div class="col-lg-4">
+    <img class="thumbnail" src="{{product.image.imageURL}}">
+    <div class="box-element product">
+        <h1><strong>{{product.name}}</strong></h1>
+        <hr>
+        <button class="btn btn-outline-secondary add-btn">Buy Now</button>
+        <a class="btn btn-outline-success" href="#">View</a>
+        <h4 style="display: inline-block;float: right">{{product.price|floatformat:2}}</h4>
+    </div>
+</div>
+
+<button type="submit" onclick="payWithPaystack()"> Pay </button>
+
+
+<!-- 
+<form id="paymentForm">
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input type="email" id="email-address" required />
+    </div>
+    <div class="form-group">
+      <label for="amount">Amount</label>
+      <input type="tel" id="amount" required />
+    </div>
+    <div class="form-group">
+      <label for="first-name">First Name</label>
+      <input type="text" id="first-name" />
+    </div>
+    <div class="form-group">
+      <label for="last-name">Last Name</label>
+      <input type="text" id="last-name" />
+    </div>
+    <div class="form-submit">
+      
+    </div>
+  </form> -->
+
+
+
+<script>
+
+
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              // Does this cookie string begin with the name we want?
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    console.log(csrftoken);
+
+    var PAYSTACK_PUBLIC_KEY = "{{PAYSTACK_PUBLIC_KEY}}"
+    var product = "{{product}}"
+    var order_cost = "{{product.price}}"
+    var amount = parseInt(order_cost) *100;
+    var current_url = window.location;
+    var redirect_url = '127.0.0.1/' 
+    console.log(current_url)
+
+    const paymentForm = document.getElementById('paymentForm');
+    paymentForm.addEventListener("submit", payWithPaystack, false);
+    
+    function payWithPayStack(){
+        let redirect_url = "{% url 'deposit_detail' %}";
+        let currency = "NGN";
+        let user = "{{user.email}}"
+        let plan = "";
+        let amount = document.getElementById('deposit_amount').value* 100 ;
+        let ref = "{{user.id}}"+Math.floor((Math.random() * 1000000000) + 1 );
+        let obj = {
+            key: PAYSTACK_PUBLIC_KEY,
+            email: '{{ user.email }}',
+            amount: amount,
+            ref: ref,
+            callback: function(response){
+                $.ajax({
+                    type: 'POST',
+                    url: "/deposit/",
+                    data: {
+                        'csrfmiddlewaretoken': csrftoken,
+                        'amount': amount,
+                        'ref': ref,
+                        'user': user,
+                    },
+                    
+                    success: function(response){
+                        console.log(response);
+                        // location.reload();
+                        window.location.href = redirect_url + 'ref='+ref;
+                      
+
+                    },
+                    error: function(error){
+                        console.log(error);
+                        
+                    }
+                })
+            }
+        }
+        if (Boolean(currency)){
+            obj.currency = currency.toUpperCase()
+        }
+        if (Boolean(plan)){
+            obj.plan - plan;
+        }
+        var handler = PaystackPop.setup(obj);
+        handler.openIframe();
+    }
+
+</script>
+
