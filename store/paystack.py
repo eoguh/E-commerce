@@ -4,7 +4,6 @@ from django.conf import settings
 import requests
 
 
-
 class PayStack:
     PAYSTACK_SECRET_KEY = settings.PAYSTACK_SECRET_KEY
     base_url = 'https://api.paystack.co'
